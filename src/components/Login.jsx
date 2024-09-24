@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../App.css';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Registro from './Registro'
 import logoCorhuila from '../logoCorhuila.jpg';
 import fondo from '../Fondo.png';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+import { jwtDecode } from 'jwt-decode'; 
 import { Button, Form, FormGroup, Container, Card, CardBody, FormFeedback, Input } from 'reactstrap';
 
 const Login = () => {
@@ -10,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [validated, setValidated] = useState(false);
   const [errors, setErrors] = useState({ username: '', password: '' });
+  const navigate = useNavigate();
 
   const validateForm = () => {
     let formIsValid = true;
@@ -34,14 +41,63 @@ const Login = () => {
     return formIsValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log('Usuario:', username, 'Contraseña:', password);
-      // Aquí puedes redirigir al usuario o realizar otra acción
+      try {
+        const loginData = {
+          email: username,
+          password: password,
+        };
+
+        const response = await axios.post('http://localhost:8080/api/user/login', loginData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const { status, message, data } = response.data;
+        
+        if (response.data.status === 200 || response.data.status === 201) {
+         
+          decodeToken(response.data.data)
+      }
+      if(response.data.status === 400 || response.data.status === 403 ||response.data.status === 401 || response.data.status === 404  ){
+          Swal.fire({
+              icon: 'error',
+              title: 'Error En el inicio de sesion',
+              text: message || 'Por favor inténtalo nuevamente.',
+              confirmButtonText: 'Aceptar'
+          })
+      }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en el servidor',
+          text: error.response?.data?.message || 'Ocurrió un error al intentar iniciar sesión.',
+          confirmButtonText: 'Aceptar'
+        });
+      }
     }
-    setValidated(true);
   };
+
+  const decodeToken = (token) => {
+    const decodedToken = jwtDecode(token);
+    const userRole = decodedToken.role;
+   if(userRole === 'Docente'){
+    navigate("/Agendas"); 
+   }
+   if(userRole === 'Admin'){
+    navigate("/Administracion");
+   }
+   if(userRole === 'Decano'){
+    navigate("/Autorizacion_Decano");
+   }
+   if(userRole === 'Vicerrector'){
+    navigate("/Autorizacion_Vicerrector");
+   }
+  };
+
 
   return (
     <div className="login-page" style={styles.page}>
@@ -57,7 +113,7 @@ const Login = () => {
                   type="email" 
                   className="form-control mt-3" 
                   id="username" 
-                  placeholder="Nombre de usuario o correo electrónico" 
+                  placeholder="Correo electrónico" 
                   value={username} 
                   onChange={(e) => setUsername(e.target.value)} 
                   invalid={!!errors.username}
@@ -80,9 +136,13 @@ const Login = () => {
                 Acceder
               </Button>
               <div className="mt-3">
-                <a href="/forgot-password" style={styles.link}>
+                <a href="/forgot-password" style={{...styles.link, display: 'block'}  }>
                   ¿Olvidó su contraseña?
                 </a>
+                <a href="Registro" style={{...styles.link, display: 'block'}}>
+                  Registrate
+                </a>
+                
               </div>
             </Form>
           </CardBody>
@@ -91,6 +151,8 @@ const Login = () => {
     </div>
   );
 };
+
+
 
 const styles = {
   page: {

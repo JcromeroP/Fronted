@@ -5,6 +5,9 @@ import Home from './components/Home';
 import Agendas from './components/Agendas';
 import Formulario from './components/Formulario';
 import Navbarnew from './components/Navbarnew';
+import Registro from './components/Registro';
+import Admin from './components/Admin';
+
 
 function App() {
   return (
@@ -14,6 +17,8 @@ function App() {
         <Route path="/Home" element={<><Navbarnew /><Home /></>} />
         <Route path="/Agendas" element={<><Navbarnew /><Agendas /></>} />
         <Route path="/Formulario" element={<><Navbarnew /><Formulario /></>} />
+        <Route path="/Registro" element={<Registro/>}/>
+        <Route path="/Administracion" element={<Admin/>}/>
       </Routes>
     </Router>
   );
